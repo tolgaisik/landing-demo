@@ -19,6 +19,7 @@ import { useScroll } from "motion/react";
 // One-click copy/paste from the poimandres market: https://market.pmnd.rs/model/low-poly-spaceship
 const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 	(props, ref) => {
+		console.log("props", ref);
 		const { nodes, materials }: any = useGLTF(
 			"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/low-poly-spaceship/model.gltf"
 		);
@@ -27,9 +28,9 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 				(material as THREE.MeshStandardMaterial).roughness = 0;
 			});
 		}, []);
-		const ship = useRef<THREE.Group>();
+		const ship = useRef<THREE.Group>(null);
 		const scroll = useScroll();
-		useFrame((state) => {
+		useFrame(() => {
 			if (ship.current) {
 				ship.current.rotation.y = scroll.scrollYProgress.get() * Math.PI * 2;
 			}
@@ -80,14 +81,18 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 	}
 );
 
-export default function Scene({ eventSource }) {
+export default function Scene({
+	eventSource,
+}: {
+	eventSource: MutableRefObject<HTMLElement>;
+}) {
 	return (
 		<Canvas
 			dpr={[1, 2]}
 			performance={{ min: 0.1 }}
 			shadows
 			camera={{ position: [0, 1.5, 3] }}
-			eventSource={eventSource.current as MutableRefObject<HTMLElement>}
+			eventSource={eventSource.current}
 		>
 			<ambientLight intensity={1} />
 			<directionalLight position={[-10, 0, -5]} intensity={10} color='red' />
