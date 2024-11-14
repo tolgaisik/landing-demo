@@ -9,13 +9,20 @@ import React, {
 import { Canvas, useFrame } from "@react-three/fiber";
 import * as THREE from "three";
 import {
+	AccumulativeShadows,
 	Backdrop,
 	ContactShadows,
 	Environment,
 	Float,
+	Lightformer,
+	RandomizedLight,
+	Sky,
+	Stage,
+	Stars,
 	useGLTF,
 } from "@react-three/drei";
 import { useScroll } from "motion/react";
+import { useControls } from "leva";
 // One-click copy/paste from the poimandres market: https://market.pmnd.rs/model/low-poly-spaceship
 const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 	(props, ref) => {
@@ -25,7 +32,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		);
 		useLayoutEffect(() => {
 			Object.values(materials).forEach((material) => {
-				(material as THREE.MeshStandardMaterial).roughness = 0;
+				(material as THREE.MeshStandardMaterial).roughness = 0.2;
 			});
 		}, []);
 		const ship = useRef<THREE.Group>(null);
@@ -48,7 +55,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					receiveShadow
 					geometry={nodes.Cube005_1.geometry}
 					material={materials.Mat1}
-					material-color='black'
+					material-color='#232311'
 				/>
 				<mesh
 					castShadow
@@ -56,7 +63,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					geometry={nodes.Cube005_2.geometry}
 					material={materials.Mat2}
 					material-envMapIntensity={0.2}
-					material-color='black'
+					material-color='#232311'
 				/>
 				<mesh
 					castShadow
@@ -92,18 +99,15 @@ export default function Scene({
 			performance={{ min: 0.1 }}
 			shadows
 			camera={{ position: [0, 1.5, 3] }}
-			eventSource={eventSource.current}
 		>
-			<ambientLight intensity={1} />
-			<directionalLight position={[-10, 0, -5]} intensity={10} color='red' />
-			<directionalLight position={[-1, -2, -5]} intensity={2} color='#0c8cbf' />
+			<ambientLight intensity={2} />
+
 			<spotLight
-				position={[10, 0, 5]}
-				intensity={4}
+				intensity={199}
 				penumbra={1}
-				angle={0.35}
-				castShadow
-				color='#0c8cbf'
+				angle={Math.PI / 2}
+				distance={20}
+				color='white'
 			/>
 
 			<Float scale={0.65} position={[0, 0.65, 0]} rotation={[0, 0.6, 0]}>
@@ -112,14 +116,13 @@ export default function Scene({
 			<Backdrop
 				castShadow
 				receiveShadow
-				floor={2}
+				floor={4}
 				position={[0, -0.5, -3]}
 				scale={[50, 10, 4]}
 			>
-				<meshStandardMaterial color='#353540' envMapIntensity={0.1} />
+				<meshStandardMaterial color='black' envMapIntensity={0.2} />
 			</Backdrop>
-			<ContactShadows position={[0, -0.485, 0]} scale={5} blur={1.5} far={1} />
-			<Environment preset='city' />
+			<ContactShadows position={[0, -0.485, 0]} scale={5} far={1} />
 		</Canvas>
 	);
 }
