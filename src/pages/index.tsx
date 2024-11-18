@@ -19,11 +19,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
@@ -40,11 +40,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
@@ -61,11 +61,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
@@ -82,11 +82,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
@@ -103,11 +103,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
@@ -124,11 +124,11 @@ export default function Home() {
 						your new site. This is a
 					</p>
 					<div className='flex flex-col md:flex-row gap-4'>
-						<button className='bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className='bg-[#ffd52b] text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>
-						<button className=' border hover:bg-blue-700 text-white font-bold py-2 px-4 rounded'>
+						<button className=' border hover:bg-blue-700 bg-white text-black font-bold py-2 px-4 rounded'>
 							{" "}
 							Button
 						</button>

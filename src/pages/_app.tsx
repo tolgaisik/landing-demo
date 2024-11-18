@@ -14,7 +14,7 @@ function NavItem({
 	return (
 		<li
 			className={
-				"text-base md:text-2xl p-2 bg-black hover:bg-gray-800 list-none"
+				"text-base md:text-2xl p-2  text-[#ffd52b] hover:bg-gray-800 list-none"
 			}
 		>
 			<Link href={href}>{children}</Link>
@@ -34,7 +34,7 @@ export default function App({ Component, pageProps }: AppProps) {
 	const ref = useRef<HTMLDivElement>(null);
 	return (
 		<>
-			<header className='flex flex-row w-screen  fixed top-0 z-10 justify-between bg-black font-bold uppercase px-4 md:px-10'>
+			<header className='flex flex-row w-screen bg-black/60  fixed top-0 z-10 justify-between backdrop-blur-md font-bold uppercase px-4 md:px-10'>
 				<nav>
 					<ul className='flex flex-row'>
 						{links.map(({ href, label }, index) => (
@@ -45,12 +45,13 @@ export default function App({ Component, pageProps }: AppProps) {
 					</ul>
 				</nav>
 			</header>
-			<main
-				ref={ref}
-				className='p-4 lg:p-10 relative bg-gradient-to-r grid grid-cols-3'
-			>
+			<main className='p-4 lg:p-10 before:pointer-events-none before:-z-10 before:bg-16 before:w-full before:lg:w-1/2 before:h-full before:left-0 before:top-0 before:fixed before:bg-repeat  before:bg-deco relative grid lg:grid-cols-2 grid-cols-1  bg-[#652ec6]/0'>
 				<Component {...pageProps} />
-				<div className='fixed top-0 w-1/2 right-0 h-[inherit] md:h-screen -z-10 bg-[url(https://pbs.twimg.com/media/GbocRZrXQAAOFQi?format=jpg&name=large)] contain-size'>
+				<div
+					id='sceneParent'
+					ref={ref}
+					className='fixed w-screen top-0 lg:w-1/2 -z-10 lg:z-0 right-0 h-screen md:h-screen   contain-size'
+				>
 					<Scene eventSource={ref as MutableRefObject<HTMLElement>} />
 				</div>
 			</main>
