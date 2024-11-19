@@ -45,6 +45,8 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		const { nodes, materials }: any = useGLTF(
 			"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/low-poly-spaceship/model.gltf"
 		);
+		const gl = useThree((state) => state.gl);
+
 		useLayoutEffect(() => {
 			const colors = [new THREE.Color(0x000000)];
 			Object.values(materials).forEach((material, index) => {
@@ -60,6 +62,8 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		useFrame((state, delta) => {
 			if (ship.current) {
 				const camera = state.camera;
+				const mouseX = state.pointer.x;
+				const mouseY = state.pointer.y;
 
 				const progress = scroll.scrollYProgress.get();
 				const currentTargetPosition = new THREE.Vector3();
@@ -80,6 +84,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 				);
 
 				camera.position.lerp(toWorldPosition, delta);
+
 				camera.lookAt(ship.current.position);
 			}
 		});
@@ -185,6 +190,7 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 		<shaderMaterial
 			attach='material'
 			{...shaderMaterialProps}
+			side={THREE.DoubleSide}
 			ref={material}
 			args={[
 				{
@@ -278,10 +284,9 @@ float fbm (in vec2 st) {
 void main() {
     vec2 st = gl_FragCoord.xy/u_resolution.xy;
 
-    vec3 color = vec3(10) * tan(gl_FragCoord.y * gl_FragCoord.x + u_time) * noise(st);
-    float magnitude = distance.x *distance.x + distance.y*distance.y + distance.z + distance.z;
+    vec3 color = vec3(10) * cos(gl_FragCoord.y * gl_FragCoord.x*.0001 + u_time * 2.) * noise(st);
 
-    gl_FragColor = vec4(vec3(sqrt(magnitude)*sin(u_time)*2.), 1.);
+    gl_FragColor = vec4(1., color.y, color.z, 1.);
 }`,
 					uniforms: {
 						u_resolution: {
@@ -314,11 +319,10 @@ export default function Scene({
 	return (
 		<Canvas dpr={[1, 2]} performance={{ min: 0.1 }} shadows>
 			<PerspectiveCamera makeDefault position={[0, 1.5, 3]}></PerspectiveCamera>
-			<mesh scale={0.2} receiveShadow castShadow>
-				<sphereGeometry />
+			<mesh scale={200} receiveShadow castShadow>
+				<boxGeometry />
 				<CircleShaderMaterial></CircleShaderMaterial>
 			</mesh>
-			<OrbitControls />
 			<ambientLight intensity={250} />
 			<pointLight position={[0, 0, 0]} intensity={0.5} />
 			<spotLight
@@ -336,9 +340,9 @@ export default function Scene({
 				position={[5, 10, 5]}
 			/>
 
-			{/* <Float scale={0.65} position={[0, 0.65, 0]} rotation={[0, 0.6, 0]}>
+			<Float scale={0.65} position={[0, 0.65, 0]} rotation={[0, 0.6, 0]}>
 				<Ship />
-			</Float> */}
+			</Float>
 
 			<ContactShadows position={[0, -0.485, 0]} scale={5} far={1} />
 		</Canvas>
