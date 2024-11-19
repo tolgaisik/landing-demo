@@ -18,17 +18,12 @@ import {
 import * as THREE from "three";
 import {
 	ContactShadows,
-	Environment,
 	Float,
 	Html,
-	Hud,
-	OrbitControls,
 	PerspectiveCamera,
-	ScreenSpace,
 	useGLTF,
 } from "@react-three/drei";
 import { useScroll } from "motion/react";
-import { useControls, useCreateStore } from "leva";
 
 // One-click copy/paste from the poimandres market: https://market.pmnd.rs/model/low-poly-spaceship
 const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
@@ -45,7 +40,6 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		const { nodes, materials }: any = useGLTF(
 			"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/low-poly-spaceship/model.gltf"
 		);
-		const gl = useThree((state) => state.gl);
 
 		useLayoutEffect(() => {
 			const colors = [new THREE.Color(0x000000)];
@@ -62,8 +56,6 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		useFrame((state, delta) => {
 			if (ship.current) {
 				const camera = state.camera;
-				const mouseX = state.pointer.x;
-				const mouseY = state.pointer.y;
 
 				const progress = scroll.scrollYProgress.get();
 				const currentTargetPosition = new THREE.Vector3();
@@ -307,14 +299,6 @@ export default function Scene({
 	eventSource: MutableRefObject<HTMLElement>;
 }) {
 	console.log(eventSource);
-	const [texture] = useState(() => {
-		if (typeof window === "undefined") return;
-		return new THREE.TextureLoader().load(
-			"/pexels.jpg",
-			console.log,
-			console.error
-		);
-	});
 
 	return (
 		<Canvas dpr={[1, 2]} performance={{ min: 0.1 }} shadows>
