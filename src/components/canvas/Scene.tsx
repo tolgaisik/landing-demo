@@ -18,6 +18,7 @@ import {
 import * as THREE from "three";
 import {
 	ContactShadows,
+	Environment,
 	Float,
 	Html,
 	PerspectiveCamera,
@@ -112,7 +113,9 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					receiveShadow
 					geometry={nodes.Cube005_1.geometry}
 					material={materials.Mat1}
-				/>
+				>
+					<CircleShaderMaterial attach='material' />
+				</mesh>
 				{/* You can optionally define a custom meshLineMaterial to use. */}
 				{/* <meshLineMaterial color={"red"} /> */}
 
@@ -120,8 +123,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					castShadow
 					receiveShadow
 					geometry={nodes.Cube005_3.geometry}
-					material={materials.Window_Frame}
-				/>
+				></mesh>
 				<mesh
 					castShadow
 					receiveShadow
@@ -133,7 +135,7 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					receiveShadow
 					geometry={nodes.Cube005_6.geometry}
 					material={materials.Window}
-				/>
+				></mesh>
 				<Html>
 					<div className='absolute top-0 left-0 p-4 border text-white bg-black bg-opacity-50'>
 						<h1 className='text-2xl'>Low Poly Spaceship</h1>
@@ -162,6 +164,7 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 		if (gl.domElement) {
 			gl.domElement.addEventListener("pointermove", (event) => {
 				if (material.current) {
+					console.log(event.clientX, event.clientY);
 					material.current.uniforms.u_mouse.value = new THREE.Vector2(
 						event.clientX,
 						event.clientY
@@ -187,98 +190,52 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 			args={[
 				{
 					vertexShader: `
-          precision mediump float;
           uniform vec2 u_resolution;
           uniform float u_time;
-uniform vec2 u_mouse;
-out vec3 distance;
-          float random (in vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
-}
-          float noise (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-}
+          uniform vec2 u_mouse;
+          out vec3 distance;
           varying vec2 vUv;
           void main() {
-            vec3 p =  position*2.;
-            float x = position.x + noise(vec2(normalize(p).x));
-            float y = position.y +noise(vec2(normalize(p).y));
-            float z =  position.z+normalize(p).z;
-            distance = vec3(x,y,z);
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0) ;
+            float d =  position.x + sin(position.y + u_time) * 0.1;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(d, position.yz, 1.0) ;
           }
         `,
-					fragmentShader: `#ifdef GL_ES
-precision mediump float;
-#endif
-
-uniform vec2 u_resolution;
+					fragmentShader: `uniform vec2 u_resolution;
 uniform vec2 u_mouse;
 uniform float u_time;
-in vec3 distance;
 
-float random (in vec2 st) {
-    return fract(sin(dot(st.xy,
-                         vec2(12.9898,78.233)))*
-        43758.5453123);
-}
-
-// Based on Morgan McGuire @morgan3d
-// https://www.shadertoy.com/view/4dS3Wd
-float noise (in vec2 st) {
-    vec2 i = floor(st);
-    vec2 f = fract(st);
-
-    // Four corners in 2D of a tile
-    float a = random(i);
-    float b = random(i + vec2(1.0, 0.0));
-    float c = random(i + vec2(0.0, 1.0));
-    float d = random(i + vec2(1.0, 1.0));
-
-    vec2 u = f * f * (3.0 - 2.0 * f);
-
-    return mix(a, b, u.x) +
-            (c - a)* u.y * (1.0 - u.x) +
-            (d - b) * u.x * u.y;
-}
-
-#define OCTAVES 10
-float fbm (in vec2 st) {
-    // Initial values
-    float value = 0.0;
-    float amplitude = .8;
-    float frequency = 0.8;
-    //
-    // Loop of octaves
-    for (int i = 0; i < OCTAVES; i++) {
-        value += amplitude * noise(st);
-        st *= 5.;
-        amplitude *= .1;
-    }
-    return value;
+vec3 palette(float t) {
+    vec3 a = vec3(0.5, 0.5, 0.5);
+    vec3 b = vec3(0.5, 0.5, 0.5);
+    vec3 c = vec3(1.0, 1.0, 1.0);
+    vec3 d = vec3(0.965, 2.265, 0.837);
+    return a + b * cos(6.28318 * (c * t + d));
 }
 
 void main() {
-    vec2 st = gl_FragCoord.xy/u_resolution.xy;
+    vec2 uv =(gl_FragCoord.xy * 2. - u_resolution) / u_resolution.y;
+    vec2 uv0 = uv;
 
-    vec3 color = vec3(10) * cos(gl_FragCoord.y * gl_FragCoord.x*.0001 + u_time * 2.) * noise(st);
+    vec3 finalColor = vec3(0.0);
 
-    gl_FragColor = vec4(1., color.y, color.z, 1.);
+    for(float i =.0; i < 3.; i++) {
+      uv = fract(uv * 2.) - .5;
+
+      float d = length(uv) * exp(-length(uv));
+
+      vec3 color = palette(length(uv0) + u_time / 2.);
+
+      d = sin(d * 8. + u_time) / 8.;
+      d = abs(d);
+
+      d = 0.02 / d;
+
+      finalColor += color * d;
+    }
+
+
+
+    gl_FragColor = vec4(finalColor,1.0);
 }`,
 					uniforms: {
 						u_resolution: {
@@ -303,10 +260,7 @@ export default function Scene({
 	return (
 		<Canvas dpr={[1, 2]} performance={{ min: 0.1 }} shadows>
 			<PerspectiveCamera makeDefault position={[0, 1.5, 3]}></PerspectiveCamera>
-			<mesh scale={200} receiveShadow castShadow>
-				<boxGeometry />
-				<CircleShaderMaterial></CircleShaderMaterial>
-			</mesh>
+
 			<ambientLight intensity={250} />
 			<pointLight position={[0, 0, 0]} intensity={0.5} />
 			<spotLight
@@ -328,9 +282,12 @@ export default function Scene({
 				<Ship />
 			</Float>
 
+			<Environment preset='warehouse' background />
+
 			<ContactShadows position={[0, -0.485, 0]} scale={5} far={1} />
 		</Canvas>
 	);
 }
 
 extend({ planeGeometry: THREE.PlaneGeometry });
+extend({ CircleShaderMaterial });
