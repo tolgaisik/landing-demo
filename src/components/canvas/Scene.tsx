@@ -21,10 +21,13 @@ import {
 	Environment,
 	Float,
 	Html,
+	OrbitControls,
 	PerspectiveCamera,
+	shaderMaterial,
 	useGLTF,
 } from "@react-three/drei";
 import { useScroll } from "motion/react";
+import { useControls } from "leva";
 
 // One-click copy/paste from the poimandres market: https://market.pmnd.rs/model/low-poly-spaceship
 const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
@@ -40,6 +43,15 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 		});
 		const { nodes, materials }: any = useGLTF(
 			"https://vazxmixjsiawhamofees.supabase.co/storage/v1/object/public/models/low-poly-spaceship/model.gltf"
+		);
+
+		const [texture] = useState(() =>
+			typeof document !== "undefined"
+				? new THREE.TextureLoader().load("/deco.png", (texture) => {
+						texture.wrapS = THREE.RepeatWrapping;
+						texture.wrapT = THREE.RepeatWrapping;
+				  })
+				: null
 		);
 
 		useLayoutEffect(() => {
@@ -104,7 +116,13 @@ const Ship = forwardRef<THREE.Group, JSX.IntrinsicElements["group"]>(
 					castShadow
 					receiveShadow
 					geometry={nodes.Cube005_2.geometry}
-					material={materials.Mat2}
+					material={
+						new THREE.MeshToonMaterial({
+							color: new THREE.Color("red"),
+							side: THREE.DoubleSide,
+							shadowSide: THREE.DoubleSide,
+						})
+					}
 				/>
 
 				{/* If `target` is not defined, Trail will use the first `Object3D` child as the target. */}
@@ -158,13 +176,13 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 	const gl = useThree((state) => state.gl);
 	const prevTime = useRef(0);
 	const material = useRef<THREE.ShaderMaterial>(null);
+	const scroll = useScroll();
 
 	useEffect(() => {
 		// Update mouse position
 		if (gl.domElement) {
 			gl.domElement.addEventListener("pointermove", (event) => {
 				if (material.current) {
-					console.log(event.clientX, event.clientY);
 					material.current.uniforms.u_mouse.value = new THREE.Vector2(
 						event.clientX,
 						event.clientY
@@ -178,6 +196,7 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 		if (material.current) {
 			material.current.uniforms.u_time.value = prevTime.current;
 			prevTime.current += delta;
+			material.current.uniforms.u_scroll.value = scroll.scrollYProgress.get();
 		}
 	});
 
@@ -190,52 +209,56 @@ function CircleShaderMaterial(shaderMaterialProps: ShaderMaterialProps) {
 			args={[
 				{
 					vertexShader: `
-          uniform vec2 u_resolution;
-          uniform float u_time;
-          uniform vec2 u_mouse;
-          out vec3 distance;
-          varying vec2 vUv;
-          void main() {
-            float d =  position.x + sin(position.y + u_time) * 0.1;
-            gl_Position = projectionMatrix * modelViewMatrix * vec4(d, position.yz, 1.0) ;
-          }
-        `,
-					fragmentShader: `uniform vec2 u_resolution;
-uniform vec2 u_mouse;
-uniform float u_time;
 
-vec3 palette(float t) {
-    vec3 a = vec3(0.5, 0.5, 0.5);
-    vec3 b = vec3(0.5, 0.5, 0.5);
-    vec3 c = vec3(1.0, 1.0, 1.0);
-    vec3 d = vec3(0.965, 2.265, 0.837);
-    return a + b * cos(6.28318 * (c * t + d));
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform vec2 u_mouse;
+uniform float u_seed;
+uniform float u_scroll;
+out vec3 distance;
+varying vec2 vUv;
+
+// Function to generate random noise
+float random(vec2 st) {
+    return fract(sin(dot(st.xy + u_seed, vec2(12.9898, 78.233))) * 43758.5453123);
+}
+
+// Function to generate smooth noise
+float noise(vec2 st) {
+    vec2 i = floor(st);
+    vec2 f = fract(st);
+
+    float a = random(i);
+    float b = random(i + vec2(1.0, 0.0));
+    float c = random(i + vec2(0.0, 1.0));
+    float d = random(i + vec2(1.0, 1.0));
+
+    vec2 u = f * f * (3.0 - 2.0 * f);
+
+    return mix(a, b, u.x) + (c - a) * u.y * (1.0 - u.x) + (d - b) * u.x * u.y;
 }
 
 void main() {
-    vec2 uv =(gl_FragCoord.xy * 2. - u_resolution) / u_resolution.y;
-    vec2 uv0 = uv;
-
-    vec3 finalColor = vec3(0.0);
-
-    for(float i =.0; i < 3.; i++) {
-      uv = fract(uv * 2.) - .5;
-
-      float d = length(uv) * exp(-length(uv));
-
-      vec3 color = palette(length(uv0) + u_time / 2.);
-
-      d = sin(d * 8. + u_time) / 8.;
-      d = abs(d);
-
-      d = 0.02 / d;
-
-      finalColor += color * d;
-    }
-
-
-
-    gl_FragColor = vec4(finalColor,1.0);
+    vec3 p = position;
+    float scroll = min(u_scroll, 0.99);
+    float x = sin(position.x * scroll) + cos(position.x * scroll);
+    float y = cos(position.y * scroll) + sin(position.y * scroll);
+    float z = sin(position.z * scroll) + cos(position.z * scroll);
+    vec3 transformed = vec3(x, y, z) - vec3(.01);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+}`,
+					fragmentShader: `
+uniform vec2 u_resolution;
+uniform float u_time;
+uniform vec2 u_mouse;
+uniform float u_scroll;
+          void main() {
+    vec2 st = gl_FragCoord.xy / u_resolution.xy;
+    st.x *= u_resolution.x / u_resolution.y;
+    float d = length(st - 0.5) * exp(u_scroll) * sin(2.*u_time);
+    d = smoothstep(0.25, 0.2495, d);
+    d = 1.0 - d * 0.5;
+    gl_FragColor = vec4(d, st.xy, 1.0);
 }`,
 					uniforms: {
 						u_resolution: {
@@ -243,6 +266,8 @@ void main() {
 						},
 						u_mouse: { value: new THREE.Vector2(0, 0) },
 						u_time: { value: 0.0 },
+						u_scroll: { value: 0.0 },
+						u_seed: { value: Math.random() * 100.0 }, // Add seed uniform
 					},
 				},
 			]}
@@ -257,37 +282,30 @@ export default function Scene({
 }) {
 	console.log(eventSource);
 
+	const { color, intensity } = useControls({ color: [0, 0, 0], intensity: 1 });
+
 	return (
 		<Canvas dpr={[1, 2]} performance={{ min: 0.1 }} shadows>
 			<PerspectiveCamera makeDefault position={[0, 1.5, 3]}></PerspectiveCamera>
 
-			<ambientLight intensity={250} />
-			<pointLight position={[0, 0, 0]} intensity={0.5} />
-			<spotLight
-				color='white'
-				angle={0.2}
-				intensity={400}
-				castShadow
-				position={[5, 10, 5]}
-			/>
-			<spotLight
-				angle={0.2}
-				color='blue'
-				intensity={400}
-				castShadow
-				position={[5, 10, 5]}
+			<ambientLight intensity={intensity} />
+			<directionalLight
+				intensity={intensity}
+				color={color}
+				position={[0, 10, 0]}
 			/>
 
-			<Float scale={0.65} position={[0, 0.65, 0]} rotation={[0, 0.6, 0]}>
-				<Ship />
-			</Float>
-
-			<Environment preset='warehouse' background />
-
+			<mesh position={[0, 1, 0]} scale={20}>
+				<planeGeometry args={[10, 10, 30, 30]} />
+				<CircleShaderMaterial wireframe />
+			</mesh>
+			<OrbitControls />
+			<Environment preset='city' background blur={1} ground />
 			<ContactShadows position={[0, -0.485, 0]} scale={5} far={1} />
 		</Canvas>
 	);
 }
 
 extend({ planeGeometry: THREE.PlaneGeometry });
-extend({ CircleShaderMaterial });
+extend({ shaderMaterial: THREE.ShaderMaterial });
+extend({ meshBasicMaterial: THREE.MeshBasicMaterial });
